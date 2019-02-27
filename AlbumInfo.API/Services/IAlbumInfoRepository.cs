@@ -13,5 +13,7 @@ namespace AlbumInfo.API.Services
         Album GetAlbum(int albumId, bool includeTracks);
         IEnumerable<Track> GetTracksForAlbum(int albumId);
         Track GetTrackForAlbum(int albumId, int trackId);
+        void AddTrackForAlbum(int albumId, Track track);
+        bool Save();
     }
 }

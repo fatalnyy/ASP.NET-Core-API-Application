@@ -39,7 +39,18 @@ namespace AlbumInfo.API.Services
 
         public IEnumerable<Track> GetTracksForAlbum(int albumId)
         {
-            return _context.Tracks.Where(a => a.Id == albumId).ToList();
+            return _context.Tracks.Where(a => a.AlbumId == albumId).ToList();
+        }
+
+        public void AddTrackForAlbum(int albumId, Track track)
+        {
+            var album = GetAlbum(albumId, false);
+            album.Tracks.Add(track);
+        }
+
+        public bool Save()
+        {
+            return (_context.SaveChanges() >= 0);
         }
     }
 }

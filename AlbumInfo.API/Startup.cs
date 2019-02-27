@@ -64,6 +64,14 @@ namespace AlbumInfo.API
             albumInfoContext.EnsureSeedDataForContext();
             //app.UseHttpsRedirection();
             app.UseStatusCodePages();
+
+            AutoMapper.Mapper.Initialize(cfg =>
+            {
+                cfg.CreateMap<Entities.Album, Models.AlbumWithoutTracksDto>();
+                cfg.CreateMap<Entities.Album, Models.AlbumDto>();
+                cfg.CreateMap<Entities.Track, Models.TrackDto>();
+                cfg.CreateMap<Models.TrackForCreationDto, Entities.Track>();
+            });
             app.UseMvc();
         }
     }

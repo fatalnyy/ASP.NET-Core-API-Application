@@ -1,5 +1,6 @@
 ﻿using AlbumInfo.API.Models;
 using AlbumInfo.API.Services;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -20,20 +21,8 @@ namespace AlbumInfo.API.Controllers
         [HttpGet()]
         public IActionResult GetAlbums()
         {
-            //return Ok(AlbumDataStore.Current.Albums);
             var albumEntities = _albumInfoRepository.GetAlbums();
-
-            var results = new List<AlbumWithoutTracksDto>();
-
-            foreach (var albumEntity in albumEntities)
-            {
-                results.Add(new AlbumWithoutTracksDto
-                {
-                    Id = albumEntity.Id,
-                    Name = albumEntity.Name,
-                    Artist = albumEntity.Artist
-                });
-            }
+            var results = Mapper.Map<IEnumerable<AlbumWithoutTracksDto>>(albumEntities);
 
             return Ok(results);
         }
@@ -48,39 +37,14 @@ namespace AlbumInfo.API.Controllers
 
             if (includeTracks)
             {
-                var albumResult = new AlbumDto()
-                {
-                    Id = album.Id,
-                    Name = album.Name,
-                    Artist = album.Artist
-                };
-
-                foreach (var track in album.Tracks)
-                {
-                    albumResult.Tracks.Add(new TrackDto()
-                    {
-                        Id = track.Id,
-                        Name = track.Name,
-                        Duration = track.Duration
-                    });
-                }
+                var albumResult = Mapper.Map<AlbumDto>(album);
 
                 return Ok(albumResult);
             }
 
-            var albumWithoutTracksResult = new AlbumWithoutTracksDto()
-            {
-                Id = album.Id,
-                Name = album.Name,
-                Artist = album.Artist
-            };
+            var albumWithoutTracksResult = Mapper.Map<AlbumWithoutTracksDto>(album);
 
             return Ok(albumWithoutTracksResult);
-            //var albumToReturn = AlbumDataStore.Current.Albums.FirstOrDefault(a => a.Id == id);
-            //if (albumToReturn == null)
-            //    return NotFound();
-
-            //return Ok(albumToReturn);
         }
     }
 }

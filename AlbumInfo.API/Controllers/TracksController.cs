@@ -1,5 +1,6 @@
 ﻿using AlbumInfo.API.Models;
 using AlbumInfo.API.Services;
+using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -28,7 +29,6 @@ namespace AlbumInfo.API.Controllers
        {
             try
             {
-                //var album = AlbumDataStore.Current.Albums.FirstOrDefault(a => a.Id == albumId);
                 if (!_albumInfoRepository.AlbumExists(albumId))
                 {
                     _logger.LogInformation($"Album with id {albumId} wasn't found when accessing tracks");
@@ -37,25 +37,9 @@ namespace AlbumInfo.API.Controllers
 
                 var tracksForAlbum = _albumInfoRepository.GetTracksForAlbum(albumId);
 
-                var tracksForAlbumResults = new List<TrackDto>();
+                var tracksForAlbumResults = Mapper.Map<IEnumerable<TrackDto>>(tracksForAlbum);
 
-                foreach (var track in tracksForAlbum)
-                {
-                    tracksForAlbumResults.Add(new TrackDto()
-                    {
-                        Id = track.Id,
-                        Name = track.Name,
-                        Duration = track.Duration
-                    });
-                }
                 return Ok(tracksForAlbumResults);
-                //if (album == null)
-                //{
-                //    _logger.LogInformation($"The album with id {albumId} was not found.");
-                //    return NotFound();
-                //}
-
-                //return Ok(album.Tracks);
             }
             catch(Exception ex)
             {
@@ -75,24 +59,9 @@ namespace AlbumInfo.API.Controllers
             if (track == null)
                 return NotFound();
 
-            var trackResult = new TrackDto()
-            {
-                Id = track.Id,
-                Name = track.Name,
-                Duration = track.Duration
-            };
+            var trackResult = Mapper.Map<TrackDto>(track);
 
             return Ok(trackResult);
-            //var album = AlbumDataStore.Current.Albums.FirstOrDefault(a => a.Id == albumId);
-
-            //if (album == null)
-            //    return NotFound();
-
-            //var track = album.Tracks.FirstOrDefault(t => t.Id == trackId);
-            //if (track == null)
-            //    return NotFound();
-
-            //return Ok(track);
         }
 
         [HttpPost("{albumId}/tracks")]
@@ -102,21 +71,17 @@ namespace AlbumInfo.API.Controllers
             if (track == null)
                 return BadRequest();
 
-            var album = AlbumDataStore.Current.Albums.FirstOrDefault(a => a.Id == albumId);
-
-            if (album == null)
+            if (!_albumInfoRepository.AlbumExists(albumId))
                 return NotFound();
 
-            var lastTrackId = AlbumDataStore.Current.Albums.SelectMany(a => a.Tracks).Max(p => p.Id);
+            var finalTrack = Mapper.Map<Entities.Track>(track);
 
-            var finalTrack = new TrackDto()
-            {
-                Id = ++lastTrackId,
-                Name = track.Name,
-                Duration = track.Duration
-            };
+            _albumInfoRepository.AddTrackForAlbum(albumId, finalTrack);
 
-            album.Tracks.Add(finalTrack);
+            if (!_albumInfoRepository.Save())
+                return StatusCode(500, "A problem happened while handling your request!");
+
+
 
             return CreatedAtRoute("GetTrack", new
             { albumId = albumId, trackId = finalTrack.Id }, finalTrack);
