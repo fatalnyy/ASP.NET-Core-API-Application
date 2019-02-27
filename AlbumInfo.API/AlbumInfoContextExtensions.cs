@@ -93,6 +93,19 @@ namespace AlbumInfo.API
                             Duration = 3.53f
                         },
                     }
+                },
+                new Album()
+                {
+                    Name = "Lenske",
+                    Artist = "Amelie Lens",
+                    Tracks = new List<Track>()
+                    {
+                        new Track()
+                        {
+                            Name = "NeverTheSame",
+                            Duration = 9.9f
+                        }
+                    }
                 }
             };
 

@@ -15,11 +15,12 @@ namespace AlbumInfo.API.Controllers
     {
         private ILogger<TracksController> _logger;
         private IMailService _mailServices;
-
-        public TracksController(ILogger<TracksController> logger, IMailService mailservices)
+        private IAlbumInfoRepository _albumInfoRepository;
+        public TracksController(ILogger<TracksController> logger, IMailService mailservices, IAlbumInfoRepository albumInfoRepository)
         {
             _logger = logger;
             _mailServices = mailservices;
+            _albumInfoRepository = albumInfoRepository;
         }
 
        [HttpGet("{albumId}/tracks")]
@@ -27,15 +28,34 @@ namespace AlbumInfo.API.Controllers
        {
             try
             {
-                var album = AlbumDataStore.Current.Albums.FirstOrDefault(a => a.Id == albumId);
-
-                if (album == null)
+                //var album = AlbumDataStore.Current.Albums.FirstOrDefault(a => a.Id == albumId);
+                if (!_albumInfoRepository.AlbumExists(albumId))
                 {
-                    _logger.LogInformation($"The album with id {albumId} was not found.");
+                    _logger.LogInformation($"Album with id {albumId} wasn't found when accessing tracks");
                     return NotFound();
                 }
 
-                return Ok(album.Tracks);
+                var tracksForAlbum = _albumInfoRepository.GetTracksForAlbum(albumId);
+
+                var tracksForAlbumResults = new List<TrackDto>();
+
+                foreach (var track in tracksForAlbum)
+                {
+                    tracksForAlbumResults.Add(new TrackDto()
+                    {
+                        Id = track.Id,
+                        Name = track.Name,
+                        Duration = track.Duration
+                    });
+                }
+                return Ok(tracksForAlbumResults);
+                //if (album == null)
+                //{
+                //    _logger.LogInformation($"The album with id {albumId} was not found.");
+                //    return NotFound();
+                //}
+
+                //return Ok(album.Tracks);
             }
             catch(Exception ex)
             {
@@ -47,16 +67,32 @@ namespace AlbumInfo.API.Controllers
         [HttpGet("{albumId}/tracks/{trackId}", Name = "GetTrack")]
         public IActionResult GetTrack(int albumId, int trackId)
         {
-            var album = AlbumDataStore.Current.Albums.FirstOrDefault(a => a.Id == albumId);
-
-            if (album == null)
+            if (!_albumInfoRepository.AlbumExists(albumId))
                 return NotFound();
 
-            var track = album.Tracks.FirstOrDefault(t => t.Id == trackId);
+            var track = _albumInfoRepository.GetTrackForAlbum(albumId, trackId);
+
             if (track == null)
                 return NotFound();
 
-            return Ok(track);
+            var trackResult = new TrackDto()
+            {
+                Id = track.Id,
+                Name = track.Name,
+                Duration = track.Duration
+            };
+
+            return Ok(trackResult);
+            //var album = AlbumDataStore.Current.Albums.FirstOrDefault(a => a.Id == albumId);
+
+            //if (album == null)
+            //    return NotFound();
+
+            //var track = album.Tracks.FirstOrDefault(t => t.Id == trackId);
+            //if (track == null)
+            //    return NotFound();
+
+            //return Ok(track);
         }
 
         [HttpPost("{albumId}/tracks")]

@@ -41,6 +41,8 @@ namespace AlbumInfo.API
 #endif
             var connectionString = Startup.Configuration["connectionStrings:albumInfoDBConnectionString"];
             services.AddDbContext<AlbumInfoContext>(o => o.UseSqlServer(connectionString));
+
+            services.AddScoped<IAlbumInfoRepository, AlbumInfoRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
