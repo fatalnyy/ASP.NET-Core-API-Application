@@ -48,6 +48,10 @@ namespace AlbumInfo.API.Services
             album.Tracks.Add(track);
         }
 
+        public void DeleteTrack(Track track)
+        {
+            _context.Tracks.Remove(track);
+        }
         public bool Save()
         {
             return (_context.SaveChanges() >= 0);

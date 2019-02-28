@@ -14,6 +14,7 @@ namespace AlbumInfo.API.Services
         IEnumerable<Track> GetTracksForAlbum(int albumId);
         Track GetTrackForAlbum(int albumId, int trackId);
         void AddTrackForAlbum(int albumId, Track track);
+        void DeleteTrack(Track track);
         bool Save();
     }
 }

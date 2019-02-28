@@ -71,6 +71,8 @@ namespace AlbumInfo.API
                 cfg.CreateMap<Entities.Album, Models.AlbumDto>();
                 cfg.CreateMap<Entities.Track, Models.TrackDto>();
                 cfg.CreateMap<Models.TrackForCreationDto, Entities.Track>();
+                cfg.CreateMap<Models.TrackForUpdateDto, Entities.Track>();
+                cfg.CreateMap<Entities.Track, Models.TrackForUpdateDto>();
             });
             app.UseMvc();
         }

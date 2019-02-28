@@ -81,10 +81,10 @@ namespace AlbumInfo.API.Controllers
             if (!_albumInfoRepository.Save())
                 return StatusCode(500, "A problem happened while handling your request!");
 
-
+            var createdTrack = Mapper.Map<Models.TrackDto>(finalTrack);
 
             return CreatedAtRoute("GetTrack", new
-            { albumId = albumId, trackId = finalTrack.Id }, finalTrack);
+            { albumId = albumId, trackId = createdTrack.Id }, createdTrack);
 
         }
 
@@ -98,18 +98,17 @@ namespace AlbumInfo.API.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var album = AlbumDataStore.Current.Albums.FirstOrDefault(a => a.Id == albumId);
-
-            if (album == null)
+            if (!_albumInfoRepository.AlbumExists(albumId))
                 return NotFound();
 
-            var trackToUpdate = album.Tracks.FirstOrDefault(t => t.Id == trackId);
-
-            if (trackToUpdate == null)
+            var trackEntity = _albumInfoRepository.GetTrackForAlbum(albumId, trackId);
+            if (trackEntity == null)
                 return NotFound();
 
-            trackToUpdate.Name = track.Name;
-            trackToUpdate.Duration = track.Duration;
+            Mapper.Map(track, trackEntity);
+
+            if (!_albumInfoRepository.Save())
+                return StatusCode(500, "A problem happened while handling your request!");
 
             return NoContent();
         }
@@ -121,30 +120,24 @@ namespace AlbumInfo.API.Controllers
         //    if (patchDoc == null)
         //        return BadRequest();
 
-        //    var album = AlbumDataStore.Current.Albums.FirstOrDefault(a => a.Id == albumId);
-
-        //    if (album == null)
+        //    if (!_albumInfoRepository.AlbumExists(albumId))
         //        return NotFound();
 
-        //    var trackToUpdate = album.Tracks.FirstOrDefault(t => t.Id == trackId);
-
-        //    if (trackToUpdate == null)
+        //    var trackEntity = _albumInfoRepository.GetTrackForAlbum(albumId, trackId);
+        //    if (trackEntity == null)
         //        return NotFound();
 
-        //    var trackToPatch =
-        //        new TrackForUpdateDto()
-        //        {
-        //            Name = trackToUpdate.Name,
-        //            Duration = trackToUpdate.Duration
-        //        };
+        //    var trackToPatch = Mapper.Map<TrackForUpdateDto>(trackEntity);
 
         //    patchDoc.ApplyTo(trackToPatch, ModelState);
 
         //    if (!ModelState.IsValid)
         //        return BadRequest(ModelState);
 
-        //    trackToUpdate.Name = trackToPatch.Name;
-        //    trackToUpdate.Duration = trackToPatch.Duration;
+        //    Mapper.Map(trackToPatch, trackEntity);
+
+        //    if (!_albumInfoRepository.Save())
+        //        return StatusCode(500, "A problem happened while handling your request!");
 
         //    return NoContent();
         //}
@@ -152,18 +145,19 @@ namespace AlbumInfo.API.Controllers
         [HttpDelete("{albumId}/tracks/{trackId}")]
         public IActionResult DeleteTrack(int albumId, int trackId)
         {
-            var album = AlbumDataStore.Current.Albums.FirstOrDefault(a => a.Id == albumId);
-
-            if (album == null)
+            if (!_albumInfoRepository.AlbumExists(albumId))
                 return NotFound();
 
-            var trackToDelete = album.Tracks.FirstOrDefault(t => t.Id == trackId);
-
-            if (trackToDelete == null)
+            var trackEntity = _albumInfoRepository.GetTrackForAlbum(albumId, trackId);
+            if (trackEntity == null)
                 return NotFound();
 
-            album.Tracks.Remove(trackToDelete);
-            _mailServices.Send("Track was deleted", $"Track with name {trackToDelete.Name} was deleted with id {trackToDelete.Id}");
+            _albumInfoRepository.DeleteTrack(trackEntity);
+
+            if (!_albumInfoRepository.Save())
+                return StatusCode(500, "A problem happened while handling your request!");
+
+            _mailServices.Send("Track was deleted", $"Track with name {trackEntity.Name} was deleted with id {trackEntity.Id}");
 
             return NoContent();
         }
